@@ -26,4 +26,5 @@ results will be saved in ./results folder
 
 ## Maintenance
 
-- update playwright docker image: mcr.microsoft.com/playwright:v1.42.1-jammy
+- update playwright docker image: mcr.microsoft.com/playwright:v1.46.1-jammy
+- update local playwright: `npx playwright install`
