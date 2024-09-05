@@ -8,46 +8,44 @@ module.exports = class Crawler {
   crawl = async (url, debug) => {
     const targetUrl = this.enforceTrailingSlash(url);
 
-    if (!this.browser) {
-      this.browser = await playwright.chromium.launch({
+    try {
+      const browser = await playwright.chromium.launch({
         headless: !debug,
       });
-    }
 
-    if (!this.page) {
-      this.page = await this.browser.newPage();
-    }
+      const page = await browser.newPage();
 
-    try {
-      await this.page.goto(targetUrl);
-    } catch (error) {
-      this.logger.log(error);
-    }
+      await page.goto(targetUrl);
 
-    this.mimicScroll(0);
+      this.mimicScroll(0);
 
-    const htmlLinks = await this.page.getByRole("link").all();
-    const links = [];
+      const htmlLinks = await page.getByRole("link").all();
+      const links = [];
 
-    for (const link of htmlLinks) {
-      const href = this.enforceAbsoluteUrl(
-        await link.getAttribute("href"),
-        targetUrl
-      );
+      for (const link of htmlLinks) {
+        const href = this.enforceAbsoluteUrl(
+          await link.getAttribute("href"),
+          targetUrl
+        );
 
-      if (!links.some((l) => l.href === href)) {
-        links.push({ href, label: await link.textContent() });
+        if (!links.some((l) => l.href === href)) {
+          links.push({ href, label: await link.textContent() });
+        }
       }
+
+      const content = await page.evaluate(() => {
+        return document.body.innerText; // Gets only the visible text
+      });
+
+      return {
+        content,
+        links,
+      };
+    } catch (error) {
+      this.logger.logError(error.message);
+      console.log(error.message);
+      return {};
     }
-
-    const content = await this.page.evaluate(() => {
-      return document.body.innerText; // Gets only the visible text
-    });
-
-    return {
-      content,
-      links,
-    };
   };
 
   enforceAbsoluteUrl = (url, base) => {

@@ -8,11 +8,9 @@ require("dotenv").config();
 const app = express();
 const port = 3500;
 
-// TODO: detect concurrent requests and stop recording
 app.get("/", async (req, res) => {
-  const { DEBUG, SAME_ORIGIN_ONLY } = process.env;
+  const { DEBUG } = process.env;
   const debug = DEBUG === "true";
-  const sameOriginOnly = SAME_ORIGIN_ONLY === "true";
   const targetUrl = req.query["targetUrl"];
 
   if (!targetUrl || targetUrl === "") {
@@ -20,15 +18,9 @@ app.get("/", async (req, res) => {
     return;
   }
 
-  let result = {};
   const logger = new Logger();
   const crawler = new Crawler(logger);
-
-  try {
-    result = await crawler.crawl(targetUrl, debug, sameOriginOnly);
-  } catch (error) {
-    logger.logError(error);
-  }
+  const result = await crawler.crawl(targetUrl, debug);
 
   res.send({
     ...result,
