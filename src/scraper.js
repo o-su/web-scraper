@@ -7,11 +7,17 @@ module.exports = class Scraper {
 
   scrape = async (url, debug) => {
     const targetUrl = this.enforceTrailingSlash(url);
-    const page = await this.downloadPage(targetUrl, debug);
+    const { page, browser } = await this.downloadPage(targetUrl, debug);
 
     if (page) {
-      return await this.scrapeWeb(page, targetUrl);
+      const result = await this.scrapeWeb(page, targetUrl);
+
+      await browser.close();
+
+      return result;
     } else {
+      await browser.close();
+
       return {};
     }
   };
@@ -19,7 +25,7 @@ module.exports = class Scraper {
   scrapeBatch = async (urls, debug) => {
     const results = {};
     const targetUrls = urls.map((url) => this.enforceTrailingSlash(url));
-    const pages = await this.downloadPages(targetUrls, debug);
+    const { pages, browser } = await this.downloadPages(targetUrls, debug);
 
     for (let index = 0; index < pages.length; index++) {
       const page = pages[index];
@@ -31,6 +37,8 @@ module.exports = class Scraper {
         results[targetUrl] = {};
       }
     }
+
+    await browser.close();
 
     return results;
   };
@@ -45,11 +53,11 @@ module.exports = class Scraper {
 
       await page.goto(targetUrl);
 
-      return page;
+      return { page, browser };
     } catch (error) {
       this.logger.logError(error.message);
       console.log(error.message);
-      return undefined;
+      return { page: undefined, browser };
     }
   };
 
@@ -68,11 +76,11 @@ module.exports = class Scraper {
         pages.push(page);
       }
 
-      return pages;
+      return { pages, browser };
     } catch (error) {
       this.logger.logError(error.message);
       console.log(error.message);
-      return [];
+      return { pages: [], browser };
     }
   };
 
@@ -84,13 +92,13 @@ module.exports = class Scraper {
       const links = [];
 
       for (const link of htmlLinks) {
-        const href = this.enforceAbsoluteUrl(
-          await link.getAttribute("href"),
-          targetUrl
-        );
+        const href = await link.getAttribute("href");
+        const absoluteHref = href
+          ? this.enforceAbsoluteUrl(href, targetUrl)
+          : undefined;
 
-        if (!links.some((l) => l.href === href)) {
-          links.push({ href, label: await link.textContent() });
+        if (!links.some((l) => l.href === absoluteHref)) {
+          links.push({ absoluteHref, label: await link.textContent() });
         }
       }
 
@@ -134,10 +142,8 @@ module.exports = class Scraper {
     const scrollPosition =
       initialScrollPosition + Math.floor(Math.random() * 25) + 5;
 
-    this.scroll(page, scrollPosition);
-
     setTimeout(() => {
-      this.mimicScroll(page, scrollPosition);
+      this.scroll(page, scrollPosition);
     }, timeout);
   };
 

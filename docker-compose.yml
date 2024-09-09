@@ -7,5 +7,3 @@ services:
     ports:
       - "3500:3500"
     command: bash -c "npm run start"
-    volumes:
-      - ./results:/results
