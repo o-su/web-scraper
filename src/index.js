@@ -1,7 +1,7 @@
 "use strict";
 const express = require("express");
 
-const Crawler = require("./crawler.js");
+const Scraper = require("./scraper.js");
 const Logger = require("./logger.js");
 require("dotenv").config();
 
@@ -19,8 +19,8 @@ app.get("/", async (req, res) => {
   }
 
   const logger = new Logger();
-  const crawler = new Crawler(logger);
-  const result = await crawler.crawl(targetUrl, debug);
+  const scraper = new Scraper(logger);
+  const result = await scraper.scrape(targetUrl, debug);
 
   res.send({
     ...result,

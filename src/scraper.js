@@ -1,11 +1,11 @@
 const playwright = require("playwright");
 
-module.exports = class Crawler {
+module.exports = class Scraper {
   constructor(logger) {
     this.logger = logger;
   }
 
-  crawl = async (url, debug) => {
+  scrape = async (url, debug) => {
     const targetUrl = this.enforceTrailingSlash(url);
 
     try {
