@@ -10,10 +10,29 @@ module.exports = class Scraper {
     const page = await this.downloadPage(targetUrl, debug);
 
     if (page) {
-      return this.scrapeWeb(page, targetUrl);
+      return await this.scrapeWeb(page, targetUrl);
     } else {
       return {};
     }
+  };
+
+  scrapeBatch = async (urls, debug) => {
+    const results = {};
+    const targetUrls = urls.map((url) => this.enforceTrailingSlash(url));
+    const pages = await this.downloadPages(targetUrls, debug);
+
+    for (let index = 0; index < pages.length; index++) {
+      const page = pages[index];
+      const targetUrl = targetUrls[index];
+
+      if (page) {
+        results[targetUrl] = await this.scrapeWeb(page, targetUrl);
+      } else {
+        results[targetUrl] = {};
+      }
+    }
+
+    return results;
   };
 
   downloadPage = async (targetUrl, debug) => {
@@ -25,10 +44,35 @@ module.exports = class Scraper {
       const page = await browser.newPage();
 
       await page.goto(targetUrl);
+
+      return page;
     } catch (error) {
       this.logger.logError(error.message);
       console.log(error.message);
       return undefined;
+    }
+  };
+
+  downloadPages = async (targetUrls, debug) => {
+    try {
+      const browser = await playwright.chromium.launch({
+        headless: !debug,
+      });
+
+      const pages = [];
+
+      for (const targetUrl of targetUrls) {
+        const page = await browser.newPage();
+
+        await page.goto(targetUrl);
+        pages.push(page);
+      }
+
+      return pages;
+    } catch (error) {
+      this.logger.logError(error.message);
+      console.log(error.message);
+      return [];
     }
   };
 

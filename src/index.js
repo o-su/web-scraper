@@ -30,6 +30,26 @@ app.post("/api/scrape", async (req, res) => {
   });
 });
 
+app.post("/api/scrape-batch", async (req, res) => {
+  const { DEBUG } = process.env;
+  const debug = DEBUG === "true";
+  const { targetUrls } = req.body;
+
+  if (!targetUrls || targetUrls.length === 0) {
+    res.status(422).send({ error: "Invalid target URL" });
+    return;
+  }
+
+  const logger = new Logger();
+  const scraper = new Scraper(logger);
+  const result = await scraper.scrapeBatch(targetUrls, debug);
+
+  res.json({
+    ...result,
+    logs: logger.getLogs(),
+  });
+});
+
 app.listen(port, () => {
   console.log(`listening on port ${port}`);
 });
