@@ -7,7 +7,16 @@ module.exports = class Scraper {
 
   scrape = async (url, debug) => {
     const targetUrl = this.enforceTrailingSlash(url);
+    const page = await this.downloadPage(targetUrl, debug);
 
+    if (page) {
+      return this.scrapeWeb(page, targetUrl);
+    } else {
+      return {};
+    }
+  };
+
+  downloadPage = async (targetUrl, debug) => {
     try {
       const browser = await playwright.chromium.launch({
         headless: !debug,
@@ -16,8 +25,16 @@ module.exports = class Scraper {
       const page = await browser.newPage();
 
       await page.goto(targetUrl);
+    } catch (error) {
+      this.logger.logError(error.message);
+      console.log(error.message);
+      return undefined;
+    }
+  };
 
-      this.mimicScroll(0);
+  scrapeWeb = async (page, targetUrl) => {
+    try {
+      this.mimicScroll(page, 0);
 
       const htmlLinks = await page.getByRole("link").all();
       const links = [];
@@ -68,21 +85,21 @@ module.exports = class Scraper {
     }
   };
 
-  mimicScroll = async (initialScrollPosition) => {
+  mimicScroll = async (page, initialScrollPosition) => {
     const timeout = Math.floor(Math.random() * 2000) + 50;
     const scrollPosition =
       initialScrollPosition + Math.floor(Math.random() * 25) + 5;
 
-    this.scroll(scrollPosition);
+    this.scroll(page, scrollPosition);
 
     setTimeout(() => {
-      this.mimicScroll(scrollPosition);
+      this.mimicScroll(page, scrollPosition);
     }, timeout);
   };
 
-  scroll = async (yScroll) => {
-    if (this.page) {
-      await this.page.mouse.wheel(0, yScroll);
+  scroll = async (page, yScroll) => {
+    if (page) {
+      await page.mouse.wheel(0, yScroll);
     }
   };
 };
