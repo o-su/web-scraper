@@ -8,10 +8,12 @@ require("dotenv").config();
 const app = express();
 const port = 3500;
 
-app.get("/", async (req, res) => {
+app.use(express.json({ strict: true }));
+
+app.post("/api/scrape", async (req, res) => {
   const { DEBUG } = process.env;
   const debug = DEBUG === "true";
-  const targetUrl = req.query["targetUrl"];
+  const { targetUrl } = req.body;
 
   if (!targetUrl || targetUrl === "") {
     res.status(422).send({ error: "Invalid target URL" });
@@ -22,7 +24,7 @@ app.get("/", async (req, res) => {
   const scraper = new Scraper(logger);
   const result = await scraper.scrape(targetUrl, debug);
 
-  res.send({
+  res.json({
     ...result,
     logs: logger.getLogs(),
   });

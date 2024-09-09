@@ -21,8 +21,7 @@ DEBUG=true
 
 ## Usage
 
-open in browser: http://localhost:3500/?targetUrl=https://www.target.com/
-results will be saved in ./results folder
+curl -X POST http://localhost:3500/api/scrape -H "Content-Type: application/json" -d {\"targetUrl\":\"https://www.seznam.cz/\"}
 
 ## Maintenance
 
