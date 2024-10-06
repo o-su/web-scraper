@@ -1,5 +1,8 @@
 const playwright = require("playwright");
 
+const userAgent =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.2227.0 Safari/537.36";
+
 module.exports = class Scraper {
   constructor(logger) {
     this.logger = logger;
@@ -48,11 +51,11 @@ module.exports = class Scraper {
       const browser = await playwright.chromium.launch({
         headless: !debug,
       });
-      const context = await browser.newContext();
+      const context = await browser.newContext({ userAgent });
 
       await this.disableAutomationFlags(context);
 
-      const page = await browser.newPage();
+      const page = await context.newPage();
 
       await page.goto(targetUrl);
 
