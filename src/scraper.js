@@ -48,6 +48,9 @@ module.exports = class Scraper {
       const browser = await playwright.chromium.launch({
         headless: !debug,
       });
+      const context = await browser.newContext();
+
+      await this.disableAutomationFlags(context);
 
       const page = await browser.newPage();
 
@@ -151,5 +154,11 @@ module.exports = class Scraper {
     if (page) {
       await page.mouse.wheel(0, yScroll);
     }
+  };
+
+  disableAutomationFlags = async (context) => {
+    await context.addInitScript(
+      "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    );
   };
 };
