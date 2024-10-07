@@ -92,8 +92,7 @@ module.exports = class Scraper {
 
   scrapeWeb = async (page, targetUrl) => {
     try {
-      this.mimicScroll(page, 0);
-
+      const scrollId = this.mimicScroll(page, 0);
       const htmlLinks = await page.getByRole("link").all();
       const links = [];
 
@@ -111,6 +110,8 @@ module.exports = class Scraper {
       const content = await page.evaluate(() => {
         return document.body.innerText; // Gets only the visible text
       });
+
+      this.clearScroll(scrollId);
 
       return {
         content,
@@ -144,14 +145,18 @@ module.exports = class Scraper {
   };
 
   mimicScroll = async (page, initialScrollPosition) => {
-    const timeout = Math.floor(Math.random() * 2000) + 50;
+    const delay = Math.floor(Math.random() * 2000) + 50;
     const scrollPosition =
       initialScrollPosition + Math.floor(Math.random() * 25) + 5;
 
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       this.scroll(page, scrollPosition);
-    }, timeout);
+    }, delay);
+
+    return timeoutId;
   };
+
+  clearScroll = (scrollId) => clearTimeout(scrollId);
 
   scroll = async (page, yScroll) => {
     if (page) {
