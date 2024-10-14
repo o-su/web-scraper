@@ -57,7 +57,7 @@ module.exports = class Scraper {
 
       const page = await context.newPage();
 
-      await page.goto(targetUrl);
+      await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
 
       return { page, browser };
     } catch (error) {
@@ -78,7 +78,7 @@ module.exports = class Scraper {
       for (const targetUrl of targetUrls) {
         const page = await browser.newPage();
 
-        await page.goto(targetUrl);
+        await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
         pages.push(page);
       }
 
